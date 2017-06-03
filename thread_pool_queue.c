@@ -19,7 +19,7 @@ thread_pool_queue_node_create
     struct thread_pool_task *task
 )
 {
-    DPRINT("entered thread_pool_queue_node_create\n");
+    DPRINTF("entered thread_pool_queue_node_create\n");
     
     struct thread_pool_queue_node *node =
     (struct thread_pool_queue_node *)malloc(sizeof(struct thread_pool_queue_node));
@@ -29,7 +29,7 @@ thread_pool_queue_node_create
     node->task = task;
     node->next = NULL;
     
-    DPRINT("thread_pool_queue_node created succesfully\n");
+    DPRINTF("thread_pool_queue_node created succesfully\n");
     
     return node;
 }
@@ -41,7 +41,7 @@ thread_pool_queue_node_destroy
     struct thread_pool_queue_node *node
 )
 {
-    DPRINT("entered thread_pool_queue_node_destroy\n");
+    DPRINTF("entered thread_pool_queue_node_destroy\n");
     
     if (node == NULL)
         return;
@@ -49,14 +49,14 @@ thread_pool_queue_node_destroy
     node->next = NULL;
     free(node);
     
-    DPRINT("thread_pool_queue_node destroyed successfully\n");
+    DPRINTF("thread_pool_queue_node destroyed successfully\n");
 }
 
 /* Creates and returns a struct thread_pool_queue * */
 struct thread_pool_queue *
 thread_pool_queue_create(void)
 {
-    DPRINT("entered thread_pool_queue_create\n");
+    DPRINTF("entered thread_pool_queue_create\n");
     
     struct thread_pool_queue *queue = (struct thread_pool_queue *)malloc(sizeof(struct thread_pool_queue));
     if (queue == NULL)
@@ -73,7 +73,7 @@ thread_pool_queue_create(void)
         return NULL;
     }
     
-    DPRINT("thread_pool_queue created successfully\n");
+    DPRINTF("thread_pool_queue created successfully\n");
     
     return queue;
 }
@@ -85,7 +85,7 @@ thread_pool_queue_destroy
     struct thread_pool_queue *queue
 )
 {
-    DPRINT("entered thread_pool_queue_destroy\n");
+    DPRINTF("entered thread_pool_queue_destroy\n");
     
     int err = 0;
     struct thread_pool_queue_node *node;
@@ -113,7 +113,7 @@ thread_pool_queue_destroy
     
     free(queue);
     
-    DPRINT("trhead_pool_queue destroyed succesfully\n");
+    DPRINTF("trhead_pool_queue destroyed succesfully\n");
     
     return err;
 }
@@ -126,7 +126,7 @@ thread_pool_queue_enqueue
     struct thread_pool_task  *task
 )
 {
-    DPRINT("entered thread_pool_queue_enqueue\n");
+    DPRINTF("entered thread_pool_queue_enqueue\n");
     
     int err = 0;
     struct thread_pool_queue_node *node;
@@ -155,7 +155,7 @@ thread_pool_queue_enqueue
     
     err = pthread_mutex_unlock(&queue->qmutex);
     
-    DPRINT("thread_pool_task enqueued successfully\n");
+    DPRINTF("thread_pool_task enqueued successfully\n");
     
     return err;
 }
@@ -170,7 +170,7 @@ thread_pool_queue_dequeue
     struct thread_pool_queue *queue
 )
 {
-    DPRINT("entered thread_pool_queue_dequeue\n");
+    DPRINTF("entered thread_pool_queue_dequeue\n");
     
     struct thread_pool_queue_node *node;
     struct thread_pool_task       *task;
@@ -181,7 +181,7 @@ thread_pool_queue_dequeue
     if (pthread_mutex_trylock(&queue->qmutex))
         return NULL;
     
-    DPRINT("queue mutex acquired succesfully\n");
+    DPRINTF("queue mutex acquired succesfully\n");
     
     node = queue->head_node;
     if (node != NULL)
@@ -198,7 +198,7 @@ thread_pool_queue_dequeue
     
     free(node);
     
-    DPRINT("thread_pool_task dequeued succesfully\n");
+    DPRINTF("thread_pool_task dequeued succesfully\n");
     
     return task;
 }
