@@ -93,14 +93,15 @@ DONE:
 }
 
 /* Destroys a struct thread_pool */
-void
+int
 thread_pool_destroy(struct thread_pool *p)
 {
+    int err = 0;
     unsigned int n_threads;
     pthread_t *threads;
     
     if (p == NULL)
-        return;
+        return -1;
     
     n_threads = p->n_threads;
     threads   = p->threads;
@@ -112,7 +113,9 @@ thread_pool_destroy(struct thread_pool *p)
     p->n_threads = 0;
     
     free(threads);
-    thread_pool_queue_destroy(p->submission_queue);
+    err = thread_pool_queue_destroy(p->submission_queue);
+    
+    return err;
 }
 
 /* Submits a struct thread_pool_task * to the thread pool's submission
@@ -125,11 +128,14 @@ thread_pool_submit
     struct thread_pool_task *t
 )
 {
+    int err = 0;
+    
     if (p == NULL)
         return -1;
     
-    if (thread_pool_queue_enqueue(p->submission_queue, t) < 0)
-        return -1;
+    err = thread_pool_queue_enqueue(p->submission_queue, t);
+    if (err)
+        return err;
         
-    return 0;
+    return err;
 }

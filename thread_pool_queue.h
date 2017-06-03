@@ -27,7 +27,7 @@ struct thread_pool_queue {
 };
 
 struct thread_pool_queue * thread_pool_queue_create(void);
-void thread_pool_queue_destroy(struct thread_pool_queue *queue);
+int  thread_pool_queue_destroy(struct thread_pool_queue *queue);
 int  thread_pool_queue_enqueue(struct thread_pool_queue *queue,
                              struct thread_pool_task *task);
 struct thread_pool_task *

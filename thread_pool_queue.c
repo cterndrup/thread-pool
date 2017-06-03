@@ -66,21 +66,22 @@ thread_pool_queue_create(void)
 }
 
 /* Destroys a struct thread_pool_queue */
-void
+int
 thread_pool_queue_destroy
 (
     struct thread_pool_queue *queue
 )
 {
-    int err;
+    int err = 0;
     struct thread_pool_queue_node *node;
     
     if (queue == NULL)
-        return;
+        return -1;
     
     // Destroy all nodes in the queue
-    if (pthread_mutex_lock(&queue->qmutex))
-        return;
+    err = pthread_mutex_lock(&queue->qmutex);
+    if (err)
+        return err;
     node = queue->head_node;
     while (node) {
         struct thread_pool_queue_node *temp = node->next;
@@ -93,9 +94,11 @@ thread_pool_queue_destroy
     // Destroy the mutex
     while ((err = pthread_mutex_destroy(&queue->qmutex)) == EBUSY);
     if (err)
-        return;
+        return err;
     
     free(queue);
+    
+    return err;
 }
 
 /* Places a struct thread_pool_task * on the thread pool queue */
@@ -106,6 +109,7 @@ thread_pool_queue_enqueue
     struct thread_pool_task  *task
 )
 {
+    int err = 0;
     struct thread_pool_queue_node *node;
     
     if (queue == NULL)
@@ -115,9 +119,10 @@ thread_pool_queue_enqueue
     if (node == NULL)
         return -1;
     
-    if (pthread_mutex_lock(&queue->qmutex)) {
+    err = pthread_mutex_lock(&queue->qmutex);
+    if (err) {
         thread_pool_queue_node_destroy(node);
-        return -1;
+        return err;
     }
 
     if (queue->tail_node != NULL)
@@ -129,9 +134,9 @@ thread_pool_queue_enqueue
     
     ++queue->n_tasks;
     
-    pthread_mutex_unlock(&queue->qmutex);
+    err = pthread_mutex_unlock(&queue->qmutex);
     
-    return 0;
+    return err;
 }
 
 /*
