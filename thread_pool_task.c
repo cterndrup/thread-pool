@@ -14,27 +14,34 @@
  * Populates a thread pool task with its function, callback,
  * and associated arguments.
  */
-int
+struct thread_pool_task *
 thread_pool_task_create
 (
-    struct thread_pool_task *t,
     thread_function_t       *fun,
     void                    *fun_arg,
     thread_callback_t       *callback,
     void                    *callback_arg
 )
 {
-    DPRINT("entered thread_pool_task_create\n");
+    DPRINTF("entered thread_pool_task_create\n");
     
-    if (t == NULL)
-        return -1;
+    struct thread_pool_task *task = (struct thread_pool_task *)malloc(sizeof(struct thread_pool_task));
+    if (task == NULL)
+        return NULL;
     
-    t->function     = fun;
-    t->function_arg = fun_arg;
-    t->callback     = callback;
-    t->callback_arg = callback_arg;
+    task->function     = fun;
+    task->function_arg = fun_arg;
+    task->callback     = callback;
+    task->callback_arg = callback_arg;
     
-    DPRINT("thread_pool_task created successfully\n");
+    DPRINTF("thread_pool_task created successfully\n");
     
-    return 0;
+    return task;
+}
+
+/* Destroys a thread_pool_task */
+void
+thread_pool_task_destroy(struct thread_pool_task *task)
+{
+    free(task);
 }
