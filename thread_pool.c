@@ -82,7 +82,7 @@ thread_pool_create
     if (pool == NULL)
         goto DONE;
     
-    DPRINTF("pool allocated succesfully\n");
+    DPRINTF("pool allocated successfully\n");
     
     pool->n_threads = n_threads;
     
@@ -98,7 +98,7 @@ thread_pool_create
     if (pool->threads == NULL)
         goto FAIL_THREADS_ALLOC;
     
-    DPRINTF("threads allocated succesfully\n");
+    DPRINTF("threads allocated successfully\n");
     
     // Create each thread with thread_task
     for (i = 0; i < n_threads; ++i) {
@@ -162,7 +162,8 @@ thread_pool_destroy(struct thread_pool *p)
     free(threads);
     err = thread_pool_queue_destroy(p->submission_queue);
     free(p);
-    DPRINTF("thread pool destroyed succesfully\n");
+    
+    DPRINTF("thread pool destroyed successfully\n");
     
     return err;
 }

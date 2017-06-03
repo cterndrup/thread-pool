@@ -29,7 +29,7 @@ thread_pool_queue_node_create
     node->task = task;
     node->next = NULL;
     
-    DPRINTF("thread_pool_queue_node created succesfully\n");
+    DPRINTF("thread_pool_queue_node created successfully\n");
     
     return node;
 }
@@ -112,7 +112,7 @@ thread_pool_queue_destroy
     
     free(queue);
     
-    DPRINTF("trhead_pool_queue destroyed succesfully\n");
+    DPRINTF("thread_pool_queue destroyed successfully\n");
     
     return err;
 }
@@ -179,7 +179,7 @@ thread_pool_queue_dequeue
     if (pthread_mutex_trylock(&queue->qmutex))
         return NULL;
     
-    DPRINTF("queue mutex acquired succesfully\n");
+    DPRINTF("queue mutex acquired successfully\n");
     
     node = queue->head_node;
     if (node != NULL)
@@ -196,7 +196,7 @@ thread_pool_queue_dequeue
     
     free(node);
     
-    DPRINTF("thread_pool_task dequeued succesfully\n");
+    DPRINTF("thread_pool_task dequeued successfully\n");
     
     return task;
 }
