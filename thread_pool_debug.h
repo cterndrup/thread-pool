@@ -11,9 +11,9 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#define DPRINT(s) printf(s)
+#define DPRINTF(s) fprintf(stderr, s)
 #else
-#define DPRINT(s)
+#define DPRINTF(s)
 #endif
 
 #endif // _THREAD_POOL_DEBUG_H_
