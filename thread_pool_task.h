@@ -21,11 +21,12 @@ struct thread_pool_task {
 };
 
 struct thread_pool_task *
-    thread_pool_task_create(thread_function_t *fun,
-                            void              *fun_arg,
-                            thread_callback_t *callback,
-                            void              *callback_arg);
+thread_pool_task_create(thread_function_t *fun,
+                        void              *fun_arg,
+                        thread_callback_t *callback,
+                        void              *callback_arg);
 
-void thread_pool_task_destroy(struct thread_pool_task *task);
+void
+thread_pool_task_destroy(struct thread_pool_task *task);
 
 #endif // _THREAD_POOL_TASK_H_
