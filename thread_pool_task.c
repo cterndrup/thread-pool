@@ -7,6 +7,7 @@
 //
 
 #include <stdlib.h>
+#include "thread_pool_debug.h"
 #include "thread_pool_task.h"
 
 /*
@@ -23,6 +24,8 @@ thread_pool_task_create
     void                    *callback_arg
 )
 {
+    DPRINT("entered thread_pool_task_create\n");
+    
     if (t == NULL)
         return -1;
     
@@ -30,6 +33,8 @@ thread_pool_task_create
     t->function_arg = fun_arg;
     t->callback     = callback;
     t->callback_arg = callback_arg;
+    
+    DPRINT("thread_pool_task created successfully\n");
     
     return 0;
 }
