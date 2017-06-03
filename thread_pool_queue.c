@@ -87,15 +87,14 @@ thread_pool_queue_destroy
 {
     DPRINTF("entered thread_pool_queue_destroy\n");
     
-    int err = 0;
+    int err;
     struct thread_pool_queue_node *node;
     
     if (queue == NULL)
         return -1;
     
     // Destroy all nodes in the queue
-    err = pthread_mutex_lock(&queue->qmutex);
-    if (err)
+    if ((err = pthread_mutex_lock(&queue->qmutex)))
         return err;
     node = queue->head_node;
     while (node) {
@@ -128,7 +127,7 @@ thread_pool_queue_enqueue
 {
     DPRINTF("entered thread_pool_queue_enqueue\n");
     
-    int err = 0;
+    int err;
     struct thread_pool_queue_node *node;
     
     if (queue == NULL)
@@ -138,8 +137,7 @@ thread_pool_queue_enqueue
     if (node == NULL)
         return -1;
     
-    err = pthread_mutex_lock(&queue->qmutex);
-    if (err) {
+    if ((err = pthread_mutex_lock(&queue->qmutex))) {
         thread_pool_queue_node_destroy(node);
         return err;
     }

@@ -27,7 +27,7 @@ struct thread_pool {
     struct thread_pool_queue *submission_queue;
 };
 
-/* Function each thread initially runs */
+/* Function each thread initially runs until pool is destroyed */
 void * thread_task(void *arg)
 {
     struct thread_pool_queue *queue = (struct thread_pool_queue *)arg;
@@ -77,6 +77,7 @@ thread_pool_create
 {
     DPRINTF("entered thread_pool_create\n");
     
+    unsigned int i;
     struct thread_pool *pool = (struct thread_pool *)malloc(sizeof(struct thread_pool));
     if (pool == NULL)
         goto DONE;
@@ -100,7 +101,7 @@ thread_pool_create
     DPRINTF("threads allocated succesfully\n");
     
     // Create each thread with thread_task
-    for (unsigned int i = 0; i < n_threads; ++i) {
+    for (i = 0; i < n_threads; ++i) {
         if (pthread_create(&pool->threads[i], NULL, thread_task, (void *)pool->submission_queue))
             goto FAIL_THREADS_CREATE;
     }
@@ -110,12 +111,17 @@ thread_pool_create
     // Start timer if applicable
     if (timeout > 0 && timeout_handler != NULL) {
         if (signal(SIGALRM, timeout_handler) == SIG_ERR)
-            goto FAIL_THREADS_CREATE;
+            goto FAIL_TIMEOUT_REGISTER;
         alarm(timeout);
     }
     
     goto DONE;
-    
+
+FAIL_TIMEOUT_REGISTER:
+    for (unsigned int j = 0; j < i; ++j) {
+        pthread_cancel(pool->threads[j]);
+        pthread_join(pool->threads[j], NULL);
+    }
 FAIL_THREADS_CREATE:
     free(pool->threads);
 FAIL_THREADS_ALLOC:
@@ -133,7 +139,7 @@ thread_pool_destroy(struct thread_pool *p)
 {
     DPRINTF("entered thread_pool_destroy\n");
     
-    int err = 0;
+    int err;
     unsigned int n_threads;
     pthread_t *threads;
     

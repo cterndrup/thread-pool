@@ -17,10 +17,10 @@
 struct thread_pool_task *
 thread_pool_task_create
 (
-    thread_function_t       *fun,
-    void                    *fun_arg,
-    thread_callback_t       *callback,
-    void                    *callback_arg
+    thread_function_t *fun,
+    void              *fun_arg,
+    thread_callback_t *callback,
+    void              *callback_arg
 )
 {
     DPRINTF("entered thread_pool_task_create\n");
