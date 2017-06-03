@@ -6,6 +6,7 @@
 //
 //
 
+#include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include "thread_pool_queue.h"
@@ -14,7 +15,7 @@
 static struct thread_pool_queue_node *
 thread_pool_queue_node_create
 (
-    struct thread_pool_task *task,
+    struct thread_pool_task *task
 )
 {
     struct thread_pool_queue_node *node =
@@ -44,7 +45,7 @@ thread_pool_queue_node_destroy
 
 /* Creates and returns a struct thread_pool_queue * */
 struct thread_pool_queue *
-thread_pool_queue_node_create(void)
+thread_pool_queue_create(void)
 {
     struct thread_pool_queue *queue = (struct thread_pool_queue *)malloc(sizeof(struct thread_pool_queue));
     if (queue == NULL)
@@ -56,7 +57,7 @@ thread_pool_queue_node_create(void)
     queue->tail_node = NULL;
     
     // Initialize the queue's mutex
-    if (pthread_mutex_create(&queue->qmutex, NULL)) {
+    if (pthread_mutex_init(&queue->qmutex, NULL)) {
         free(queue);
         return NULL;
     }

@@ -3,7 +3,7 @@
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 
-struct thread_pool_task;
+#include "thread_pool_task.h"
 
 struct thread_pool *
      thread_pool_create(unsigned int n_threads);

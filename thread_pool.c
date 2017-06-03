@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "thread_pool.h"
+#include "thread_pool_queue.h"
 
 #define THREAD_SLEEP_TIME 2
 
@@ -31,8 +32,8 @@ void * thread_task(void *arg)
 
     while (1) {
         struct thread_pool_task *task;
-        thread_function_t fn;
-        thread_callback_t cb;
+        thread_function_t       *fn;
+        thread_callback_t       *cb;
         
         while ((task = thread_pool_queue_dequeue(queue)) == NULL) {
             sleep(THREAD_SLEEP_TIME);
