@@ -10,7 +10,27 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "thread_pool_debug.h"
-#include "thread_pool_queue.h"
+#include "thread_pool_task.h"
+
+struct thread_pool_queue_node {
+    // The task
+    struct thread_pool_task *task;
+    
+    // Pointer to the next node
+    struct thread_pool_queue_node *next;
+};
+
+struct thread_pool_queue {
+    // Number of tasks in the queue
+    unsigned int n_tasks;
+    
+    // The queue itself
+    struct thread_pool_queue_node *head_node;
+    struct thread_pool_queue_node *tail_node;
+    
+    // The queue locks
+    pthread_mutex_t qmutex;
+};
 
 /* Creates and returns a struct thread_pool_queue_node * */
 static struct thread_pool_queue_node *

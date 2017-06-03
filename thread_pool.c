@@ -12,9 +12,14 @@
 #include <unistd.h>
 #include "thread_pool.h"
 #include "thread_pool_debug.h"
-#include "thread_pool_queue.h"
 
 #define THREAD_SLEEP_TIME 1
+
+extern struct thread_pool_queue *thread_pool_queue_create(void);
+extern int thread_pool_queue_destroy(struct thread_pool_queue *queue);
+extern int thread_pool_queue_enqueue(struct thread_pool_queue *queue,
+                               struct thread_pool_task  *task);
+extern struct thread_pool_task * thread_pool_queue_dequeue(struct thread_pool_queue *queue);
 
 struct thread_pool {
     // Number of threads in the pool
