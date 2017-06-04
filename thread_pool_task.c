@@ -48,5 +48,9 @@ EXPORT
 void
 thread_pool_task_destroy(struct thread_pool_task *task)
 {
+    DPRINTF("entered thread_pool_task_destroy\n");
+
     free(task);
+
+    DPRINTF("thread_pool_task destroyed successfully\n");
 }
