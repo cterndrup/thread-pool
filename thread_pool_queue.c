@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "thread_pool_debug.h"
-#include "thread_pool_task.h"
 
 struct thread_pool_queue_node {
     // The task

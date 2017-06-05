@@ -16,6 +16,27 @@
 #define EXPORT __attribute__((visibility("default")))
 #define THREAD_SLEEP_TIME 1
 
+extern struct thread_pool_task *
+thread_pool_task_create(thread_function_t *fun,
+                        void              *fun_arg,
+                        thread_callback_t *callback,
+                        void              *callback_arg);
+
+extern void
+thread_pool_task_destroy(struct thread_pool_task *task);
+
+extern thread_function_t *
+thread_pool_task_get_function(struct thread_pool_task *task);
+
+extern void *
+thread_pool_task_get_function_arg(struct thread_pool_task *task);
+
+extern thread_callback_t *
+thread_pool_task_get_callback(struct thread_pool_task *task);
+
+extern void *
+thread_pool_task_get_callback_arg(struct thread_pool_task *task);
+
 extern struct thread_pool_queue *
 thread_pool_queue_create(void);
 
@@ -59,17 +80,17 @@ thread_task(void *arg)
 
         DPRINTF("task acquired\n");
 
-        fn = task->function;
-        cb = task->callback;
+        fn = thread_pool_task_get_function(task);
+        cb = thread_pool_task_get_callback(task);
 
         if (fn != NULL) {
             DPRINTF("running task\n");
-            fn(task->function_arg);
+            fn(thread_pool_task_get_function_arg(task));
         }
 
         if (cb != NULL) {
             DPRINTF("running callback\n");
-            cb(task->callback_arg);
+            cb(thread_pool_task_get_callback_arg(task));
         }
 
         thread_pool_task_destroy(task);
@@ -195,18 +216,27 @@ EXPORT
 int
 thread_pool_submit
 (
-    struct thread_pool      *p,
-    struct thread_pool_task *t
+    struct thread_pool *p,
+    thread_function_t  *function,
+    void               *function_arg,
+    thread_callback_t  *callback,
+    void               *callback_arg
 )
 {
     DPRINTF("entered thread_pool_submit\n");
 
     int err;
+    struct thread_pool_task *task;
 
     if (p == NULL)
         return -1;
+    
+    task = thread_pool_task_create(function, function_arg,
+                                   callback, callback_arg);
+    if (task == NULL)
+        return -1;
 
-    if ((err = thread_pool_queue_enqueue(p->submission_queue, t)))
+    if ((err = thread_pool_queue_enqueue(p->submission_queue, task)))
         return err;
 
     DPRINTF("task enqueued successfully\n");

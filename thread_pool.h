@@ -17,7 +17,10 @@ int
 thread_pool_destroy(struct thread_pool *p);
 
 int
-thread_pool_submit(struct thread_pool      *p,
-                   struct thread_pool_task *t);
+thread_pool_submit(struct thread_pool *p,
+                   thread_function_t  *function,
+                   void               *function_arg,
+                   thread_callback_t  *callback,
+                   void               *callback_arg);
 
 #endif // _THREAD_POOL_H_
