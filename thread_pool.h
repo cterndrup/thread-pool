@@ -5,15 +5,40 @@
 
 #include "thread_pool_task.h"
 
+/*
+ * Creates a thread pool with n_threads
+ *
+ * @param[in] n_threads     Number of threads in the pool
+ *
+ * @return 0 if successful, or an error code otherwise
+ */
 int
 thread_pool_create(unsigned int n_threads);
 
+/*
+ * Submits a task to a thread pool created with thread_pool_create
+ *
+ * @param[in] function     A function executed by one of the threads
+ *                         in the pool
+ * @param[in] function_arg The argument to function
+ * @param[in] callback     A function executed by the assigned thread after
+ *                         execution of function has completed
+ * @param[in] callback_arg The argument to callback
+ *
+ * @return 0 if successful, or an error code otherwise
+ */
 int
 thread_pool_submit(thread_function_t  *function,
                    void               *function_arg,
                    thread_callback_t  *callback,
                    void               *callback_arg);
 
+/*
+ * Blocks until all tasks submitted to the thread pool have completed.
+ * Tasks should not be submitted concurrently to the execution of this
+ * function. This allows the library to deallocate all necessary resources
+ * safely and at the appropriate time.
+ */
 void
 thread_pool_wait(void);
 

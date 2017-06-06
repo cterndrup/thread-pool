@@ -96,7 +96,7 @@ thread_task(void *arg)
         }
 
         thread_pool_task_destroy(task);
-        
+
         __atomic_sub_fetch(&outstanding_tasks, 1, __ATOMIC_SEQ_CST);
 
         DPRINTF("task completed\n");
@@ -221,7 +221,7 @@ thread_pool_submit
 
     if (pool == NULL)
         return -1;
-    
+
     task = thread_pool_task_create(function, function_arg,
                                    callback, callback_arg);
     if (task == NULL)
@@ -230,7 +230,7 @@ thread_pool_submit
     err = thread_pool_queue_enqueue(pool->submission_queue, task);
     if (err)
         return err;
-    
+
     __atomic_add_fetch(&outstanding_tasks, 1, __ATOMIC_SEQ_CST);
 
     DPRINTF("task enqueued successfully\n");
