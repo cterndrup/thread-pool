@@ -251,11 +251,9 @@ thread_pool_wait(void)
 }
 
 /* Destroys the thread pool on exit */
-#include <stdio.h>
 __attribute__((destructor))
 static void
 thread_pool_destructor(void)
 {
     thread_pool_destroy();
-    fprintf(stderr, "Hi there\n");
 }
