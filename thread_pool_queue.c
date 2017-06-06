@@ -99,7 +99,7 @@ thread_pool_queue_create(void)
 }
 
 /* Destroys a struct thread_pool_queue */
-int
+void
 thread_pool_queue_destroy
 (
     struct thread_pool_queue *queue
@@ -107,15 +107,11 @@ thread_pool_queue_destroy
 {
     DPRINTF("entered thread_pool_queue_destroy\n");
 
-    int err;
     struct thread_pool_queue_node *node;
 
     if (queue == NULL)
-        return -1;
+        return;
 
-    // Destroy all nodes in the queue
-    if ((err = pthread_mutex_lock(&queue->qmutex)))
-        return err;
     node = queue->head_node;
     while (node) {
         struct thread_pool_queue_node *temp = node->next;
@@ -123,18 +119,13 @@ thread_pool_queue_destroy
         node = temp;
     }
     queue->n_tasks = 0;
-    pthread_mutex_unlock(&queue->qmutex);
 
     // Destroy the mutex
-    while ((err = pthread_mutex_destroy(&queue->qmutex)) == EBUSY);
-    if (err)
-        return err;
+    pthread_mutex_destroy(&queue->qmutex);
 
     free(queue);
 
     DPRINTF("thread_pool_queue destroyed successfully\n");
-
-    return err;
 }
 
 /* Places a struct thread_pool_task * on the thread pool queue */

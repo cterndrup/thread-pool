@@ -7,7 +7,6 @@
 //
 
 #include <pthread.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "thread_pool.h"
@@ -40,7 +39,7 @@ thread_pool_task_get_callback_arg(struct thread_pool_task *task);
 extern struct thread_pool_queue *
 thread_pool_queue_create(void);
 
-extern int
+extern void
 thread_pool_queue_destroy(struct thread_pool_queue *queue);
 
 extern int
@@ -60,6 +59,9 @@ struct thread_pool {
     // Submission queue
     struct thread_pool_queue *submission_queue;
 };
+
+static int    outstanding_tasks = 0;
+static struct thread_pool *pool = NULL;
 
 /* Function each thread initially runs until pool is destroyed */
 static void *
@@ -94,6 +96,8 @@ thread_task(void *arg)
         }
 
         thread_pool_task_destroy(task);
+        
+        __atomic_sub_fetch(&outstanding_tasks, 1, __ATOMIC_SEQ_CST);
 
         DPRINTF("task completed\n");
     }
@@ -101,21 +105,22 @@ thread_task(void *arg)
     return NULL;
 }
 
-/* Creates and returns a struct thread_pool * */
+/* Creates a struct thread_pool */
 EXPORT
-struct thread_pool *
+int
 thread_pool_create
 (
-    unsigned int       n_threads,
-    unsigned int       timeout,
-    timeout_handler_t *timeout_handler
+    unsigned int n_threads
 )
 {
     DPRINTF("entered thread_pool_create\n");
 
+    static unsigned int create_calls = 1;
+    if (create_calls++ > 1)
+        return -1;
+
     unsigned int i;
-    struct thread_pool *pool =
-        (struct thread_pool *)malloc(sizeof(struct thread_pool));
+    pool = (struct thread_pool *)malloc(sizeof(struct thread_pool));
     if (pool == NULL)
         goto DONE;
 
@@ -148,13 +153,6 @@ thread_pool_create
 
     DPRINTF("threads created successfully\n");
 
-    // Start timer if applicable
-    if (timeout > 0 && timeout_handler != NULL) {
-        if (signal(SIGALRM, timeout_handler) == SIG_ERR)
-            goto FAIL_TIMEOUT_REGISTER;
-        alarm(timeout);
-    }
-
     goto DONE;
 
 FAIL_TIMEOUT_REGISTER:
@@ -170,43 +168,37 @@ FAIL_QUEUE_CREATE:
     free(pool);
     pool = NULL;
 DONE:
-    return pool;
+    return (pool == NULL) ? -1 : 0;
 }
 
 /* Destroys a struct thread_pool */
-EXPORT
-int
-thread_pool_destroy(struct thread_pool *p)
+static void
+thread_pool_destroy(void)
 {
     DPRINTF("entered thread_pool_destroy\n");
 
-    int err;
     unsigned int n_threads;
     pthread_t *threads;
 
-    if (p == NULL)
-        return -1;
+    if (pool == NULL)
+        return;
 
-    n_threads = p->n_threads;
-    threads   = p->threads;
+    n_threads = pool->n_threads;
+    threads   = pool->threads;
     for (unsigned int i = 0; i < n_threads; ++i) {
         // Threads running thread_task won't terminate since
         // running in infinite loop, so must be cancelled.
         DPRINTF("cancelling and joining thread\n");
-        if ((err = pthread_cancel(threads[i])))
-            return err;
-        if ((err = pthread_join(threads[i], NULL)))
-            return err;
+        pthread_cancel(threads[i]);
+        pthread_join(threads[i], NULL);
     }
-    p->n_threads = 0;
+    pool->n_threads = 0;
 
     free(threads);
-    err = thread_pool_queue_destroy(p->submission_queue);
-    free(p);
+    thread_pool_queue_destroy(pool->submission_queue);
+    free(pool);
 
     DPRINTF("thread pool destroyed successfully\n");
-
-    return err;
 }
 
 /* Submits a struct thread_pool_task * to the thread pool's submission
@@ -216,7 +208,6 @@ EXPORT
 int
 thread_pool_submit
 (
-    struct thread_pool *p,
     thread_function_t  *function,
     void               *function_arg,
     thread_callback_t  *callback,
@@ -228,7 +219,7 @@ thread_pool_submit
     int err;
     struct thread_pool_task *task;
 
-    if (p == NULL)
+    if (pool == NULL)
         return -1;
     
     task = thread_pool_task_create(function, function_arg,
@@ -236,10 +227,35 @@ thread_pool_submit
     if (task == NULL)
         return -1;
 
-    if ((err = thread_pool_queue_enqueue(p->submission_queue, task)))
+    err = thread_pool_queue_enqueue(pool->submission_queue, task);
+    if (err)
         return err;
+    
+    __atomic_add_fetch(&outstanding_tasks, 1, __ATOMIC_SEQ_CST);
 
     DPRINTF("task enqueued successfully\n");
 
     return 0;
+}
+
+/* Blocks until all submitted tasks have been completed */
+EXPORT
+void
+thread_pool_wait(void)
+{
+    int remaining_tasks;
+    do {
+        __atomic_load(&outstanding_tasks, &remaining_tasks,
+                      __ATOMIC_SEQ_CST);
+    } while (remaining_tasks);
+}
+
+/* Destroys the thread pool on exit */
+#include <stdio.h>
+__attribute__((destructor))
+static void
+thread_pool_destructor(void)
+{
+    thread_pool_destroy();
+    fprintf(stderr, "Hi there\n");
 }
