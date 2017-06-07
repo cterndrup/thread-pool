@@ -11,7 +11,9 @@
  *
  * @param[in] n_threads     Number of threads in the pool
  *
- * @return 0 if successful, or an error code otherwise
+ * @return  0 if successful
+ *          THREAD_POOL_ALLOC_ERROR on a resource allocation error
+ *          THREAD_POOL_ERROR on other error
  */
 int
 thread_pool_create(unsigned int n_threads);
@@ -26,7 +28,11 @@ thread_pool_create(unsigned int n_threads);
  *                         execution of function has completed
  * @param[in] callback_arg The argument to callback
  *
- * @return 0 if successful, or an error code otherwise
+ * @return  0 if successful
+ *          THREAD_POOL_ALLOC_ERROR on a resource allocation error
+ *          THREAD_POOL_INVALID_PTR if thread_pool_create() has not
+ *              been called or failed
+ *          THREAD_POOL_ERROR on other error
  */
 int
 thread_pool_submit(thread_function_t  *function,

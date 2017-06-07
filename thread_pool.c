@@ -117,7 +117,7 @@ thread_pool_create(unsigned int n_threads)
     static unsigned int create_calls = 1;
 
     if (create_calls++ > 1)
-        return -1;
+        return THREAD_POOL_ERROR;
 
     pool = (struct thread_pool *)malloc(sizeof(struct thread_pool));
     if (pool == NULL) {
