@@ -108,21 +108,22 @@ thread_task(void *arg)
 /* Creates a struct thread_pool */
 EXPORT
 int
-thread_pool_create
-(
-    unsigned int n_threads
-)
+thread_pool_create(unsigned int n_threads)
 {
     DPRINTF("entered thread_pool_create\n");
 
+    int err;
+    unsigned int i;
     static unsigned int create_calls = 1;
+
     if (create_calls++ > 1)
         return -1;
 
-    unsigned int i;
     pool = (struct thread_pool *)malloc(sizeof(struct thread_pool));
-    if (pool == NULL)
+    if (pool == NULL) {
+        err = THREAD_POOL_ALLOC_ERROR;
         goto DONE;
+    }
 
     DPRINTF("pool allocated successfully\n");
 
@@ -130,15 +131,19 @@ thread_pool_create
 
     // Create submission queue
     pool->submission_queue = thread_pool_queue_create();
-    if (pool->submission_queue == NULL)
+    if (pool->submission_queue == NULL) {
+        err = THREAD_POOL_ALLOC_ERROR;
         goto FAIL_QUEUE_CREATE;
+    }
 
     DPRINTF("queue created successfully\n");
 
     // Allocate memory for threads
     pool->threads = (pthread_t *)malloc(n_threads*sizeof(pthread_t));
-    if (pool->threads == NULL)
+    if (pool->threads == NULL) {
+        err = THREAD_POOL_ALLOC_ERROR;
         goto FAIL_THREADS_ALLOC;
+    }
 
     DPRINTF("threads allocated successfully\n");
 
@@ -147,20 +152,21 @@ thread_pool_create
         if (pthread_create(&pool->threads[i], NULL, thread_task,
             (void *)pool->submission_queue))
         {
+            err = THREAD_POOL_ERROR;
             goto FAIL_THREADS_CREATE;
         }
     }
 
     DPRINTF("threads created successfully\n");
 
+    err = 0;
     goto DONE;
 
-FAIL_TIMEOUT_REGISTER:
+FAIL_THREADS_CREATE:
     for (unsigned int j = 0; j < i; ++j) {
         pthread_cancel(pool->threads[j]);
         pthread_join(pool->threads[j], NULL);
     }
-FAIL_THREADS_CREATE:
     free(pool->threads);
 FAIL_THREADS_ALLOC:
     thread_pool_queue_destroy(pool->submission_queue);
@@ -168,7 +174,7 @@ FAIL_QUEUE_CREATE:
     free(pool);
     pool = NULL;
 DONE:
-    return (pool == NULL) ? -1 : 0;
+    return err;
 }
 
 /* Destroys a struct thread_pool */
@@ -220,15 +226,14 @@ thread_pool_submit
     struct thread_pool_task *task;
 
     if (pool == NULL)
-        return -1;
+        return THREAD_POOL_INVALID_PTR;
 
     task = thread_pool_task_create(function, function_arg,
                                    callback, callback_arg);
     if (task == NULL)
-        return -1;
+        return THREAD_POOL_ALLOC_ERROR;
 
-    err = thread_pool_queue_enqueue(pool->submission_queue, task);
-    if (err)
+    if ((err = thread_pool_queue_enqueue(pool->submission_queue, task)))
         return err;
 
     __atomic_add_fetch(&outstanding_tasks, 1, __ATOMIC_SEQ_CST);

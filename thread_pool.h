@@ -3,6 +3,7 @@
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 
+#include "thread_pool_error.h"
 #include "thread_pool_task.h"
 
 /*

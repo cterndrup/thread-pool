@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "thread_pool_debug.h"
+#include "thread_pool_error.h"
 
 struct thread_pool_queue_node {
     // The task
@@ -138,19 +139,18 @@ thread_pool_queue_enqueue
 {
     DPRINTF("entered thread_pool_queue_enqueue\n");
 
-    int err;
     struct thread_pool_queue_node *node;
 
     if (queue == NULL)
-        return -1;
+        return THREAD_POOL_INVALID_PTR;
 
     node = thread_pool_queue_node_create(task);
     if (node == NULL)
-        return -1;
+        return THREAD_POOL_ALLOC_ERROR;
 
-    if ((err = pthread_mutex_lock(&queue->qmutex))) {
+    if (pthread_mutex_lock(&queue->qmutex)) {
         thread_pool_queue_node_destroy(node);
-        return err;
+        return THREAD_POOL_ERROR;
     }
 
     if (queue->tail_node != NULL)
@@ -162,11 +162,12 @@ thread_pool_queue_enqueue
 
     ++queue->n_tasks;
 
-    err = pthread_mutex_unlock(&queue->qmutex);
+    if (pthread_mutex_unlock(&queue->qmutex))
+        return THREAD_POOL_ERROR;
 
     DPRINTF("thread_pool_task enqueued successfully\n");
 
-    return err;
+    return 0;
 }
 
 /*
